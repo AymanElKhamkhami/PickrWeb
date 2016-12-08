@@ -1,0 +1,779 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Site.master.cs" Inherits="Pickr.SiteMaster" %>
+
+<%@ Import Namespace="Pickr" %>
+<%@ Import Namespace="Pickr.Models" %>
+<%@ Import Namespace="JSONWebService" %>
+<%@ Import Namespace="Newtonsoft.Json.Linq" %>
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - Pickr</title>
+
+    <asp:PlaceHolder runat="server">
+        <%: Scripts.Render("~/bundles/modernizr") %>
+    </asp:PlaceHolder>
+    <webopt:BundleReference runat="server" Path="~/Content/css" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+    <%--<link href="http://pickr.somee.com/Style/bootstrap-social.css" rel="stylesheet" type="text/css" />--%>
+    <link href="http://localhost:8081/Style/bootstrap-social.css" rel="stylesheet" type="text/css" />
+    
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css" rel="stylesheet" />
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.js"></script>
+
+    <!--Style for the date picker-->
+    <%--<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/ui-lightness/jquery-ui.min.css" />--%>
+    <%--<link rel="stylesheet"  type="text/css" href="http://pickr.somee.com/Style/jquery-ui-1.10.4.custom.css" />--%>
+    <link rel="stylesheet"  type="text/css" href="http://localhost:8081/Style/jquery-ui-1.10.4.custom.css" />
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/dojo/1.11.2/dojo/dojo.js"></script>
+    <%--<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>--%>
+    
+    <%--<script type="text/javascript" src="http://pickr.somee.com/Scripts/PickrWebService.js"></script>
+    <script type="text/javascript" src="http://pickr.somee.com/Scripts/jquery-ui.multidatespicker.js"></script>--%>
+    <script type="text/javascript" src="http://localhost:8081/Scripts/PickrWebService.js"></script>
+    <script type="text/javascript" src="http://localhost:8081/Scripts/jquery-ui.multidatespicker.js"></script>
+
+
+    <style>
+        .separ:link, .separ:hover, .separ:visited {
+            cursor: default !important;
+            color: #1A242F !important;
+            text-decoration: none !important;
+            padding-left: 0px;
+            padding-right: 0px;
+        }
+
+
+        .notificationPanel {
+            position: absolute;
+            z-index: 99;
+            border-bottom-left-radius: 0px;
+            border-top-left-radius: 0px;
+            background-color: rgba(52, 152, 219, 0.9);
+            color: white;
+            box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
+            width: 600px;
+            padding: 10px;
+            visibility: visible;
+            cursor: pointer;
+            cursor: hand;
+            /*-webkit-animation: fadein 10s;*/ /* Safari, Chrome and Opera > 12.1 */
+            /*-moz-animation: fadein 10s;*/ /* Firefox < 16 */
+            /*-ms-animation: fadein 10s;*/ /* Internet Explorer */
+            /*-o-animation: fadein 10s;*/ /* Opera < 12.1 */
+            /*animation: fadein 10s;*/
+        }
+
+
+        .cls {
+            position: relative;
+            top: -2px;
+            color: inherit;
+            float: right;
+            font-size: 22.5px;
+            font-weight: bold;
+            line-height: 1;
+            color: #000000;
+            text-shadow: none;
+            opacity: 0.4;
+            filter: alpha(opacity=20);
+            color: #fff;
+            text-decoration: none;
+        }
+
+        button.cls {
+            padding: 0;
+            cursor: pointer;
+            background: transparent;
+            border: 0;
+            -webkit-appearance: none;
+        }
+
+        .cls:hover,
+        .cls:focus {
+            color: #fff;
+            cursor: pointer;
+            opacity: 1;
+        }
+
+        @keyframes fadein {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Firefox < 16 */
+        @-moz-keyframes fadein {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Safari, Chrome and Opera > 12.1 */
+        @-webkit-keyframes fadein {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Internet Explorer */
+        @-ms-keyframes fadein {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* Opera < 12.1 */
+        @-o-keyframes fadein {
+            0% {
+                opacity: 0;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .divider {
+            margin: 5px !important;
+        }
+
+        .hiddenPanel {
+            visibility: hidden;
+            display: none;
+        }
+
+        .cls:focus {
+            outline: none;
+        }
+
+        #googleMap > div {
+            border-radius: 5px;
+        }
+
+        #googleMap {
+            height: 500px;
+            margin-top: 20px;
+            padding: 0px;
+            border-radius: 5px;
+        }
+    </style>
+
+
+</head>
+<body>
+
+
+
+    <form runat="server">
+
+        <asp:ScriptManager runat="server" ID="ScriptManager1">
+            <Scripts>
+                <%--To learn more about bundling scripts in ScriptManager see http://go.microsoft.com/fwlink/?LinkID=301884 --%>
+                <%--Framework Scripts--%>
+                <asp:ScriptReference Name="MsAjaxBundle" />
+                <asp:ScriptReference Name="jquery" />
+                <asp:ScriptReference Name="bootstrap" />
+                <asp:ScriptReference Name="respond" />
+                <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
+                <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
+                <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
+                <asp:ScriptReference Name="GridView.js" Assembly="System.Web" Path="~/Scripts/WebForms/GridView.js" />
+                <asp:ScriptReference Name="DetailsView.js" Assembly="System.Web" Path="~/Scripts/WebForms/DetailsView.js" />
+                <asp:ScriptReference Name="TreeView.js" Assembly="System.Web" Path="~/Scripts/WebForms/TreeView.js" />
+                <asp:ScriptReference Name="WebParts.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebParts.js" />
+                <asp:ScriptReference Name="Focus.js" Assembly="System.Web" Path="~/Scripts/WebForms/Focus.js" />
+                <asp:ScriptReference Name="WebFormsBundle" />
+                <%--Site Scripts--%>
+            </Scripts>
+
+
+        </asp:ScriptManager>
+
+
+        <script>
+
+            //(function ($) {
+            //    if (!$.setCookie) {
+            //        $.extend({
+            //            setCookie: function (c_name, value, exdays) {
+            //                try {
+            //                    if (!c_name) return false;
+            //                    var exdate = new Date();
+            //                    exdate.setDate(exdate.getDate() + exdays);
+            //                    var c_value = escape(value) + ((exdays == null) ? "" : "; expires=" + exdate.toUTCString());
+            //                    document.cookie = c_name + "=" + c_value;
+            //                }
+            //                catch (err) {
+            //                    return false;
+            //                };
+            //                return true;
+            //            }
+            //        });
+            //    };
+            //    if (!$.getCookie) {
+            //        $.extend({
+            //            getCookie: function (c_name) {
+            //                try {
+            //                    var i, x, y,
+            //                        ARRcookies = document.cookie.split(";");
+            //                    for (i = 0; i < ARRcookies.length; i++) {
+            //                        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf("="));
+            //                        y = ARRcookies[i].substr(ARRcookies[i].indexOf("=") + 1);
+            //                        x = x.replace(/^\s+|\s+$/g, "");
+            //                        if (x == c_name) return unescape(y);
+            //                    };
+            //                }
+            //                catch (err) {
+            //                    return false;
+            //                };
+            //                return false;
+            //            }
+            //        });
+            //    };
+            //})(jQuery);
+
+            function setCookie(cname, cvalue) {
+                document.cookie = cname + "=" + cvalue;
+            }
+
+            function getCookie(cname) {
+                var name = cname + "=";
+                var ca = document.cookie.split(';');
+                for (var i = 0; i < ca.length; i++) {
+                    var c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                        c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                        return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+
+            $(document).ready(function () {
+
+                jQuery.noConflict(); // This line is very important
+
+                //Set the default value to current date in the format mm/dd/yyy
+                var fullDate = new Date();
+                var twoDigitMonth = ((fullDate.getMonth().length + 1) === 1) ? (fullDate.getMonth() + 1) : (fullDate.getMonth() + 1);
+                var currentDate = twoDigitMonth + "/" + fullDate.getDate()  + "/" + fullDate.getFullYear();
+                $(".depDate").val(currentDate);
+
+                //$(".depDate").multiDatesPicker();
+                $(".depDate").datepicker();
+
+                var visibility = [false, false, false, false, false, false];
+
+                var email = '';
+                var service = new PickrWebService();
+
+                $('#menuNotif0').hide();
+                $('#divider1').hide();
+                $('#menuNotif1').hide();
+                $('#divider2').hide();
+                $('#menuNotif2').hide();
+                $('#divider3').hide();
+                $('#menuNotif3').hide();
+                $('#divider4').hide();
+                $('#menuNotif4').hide();
+                $('#divider5').hide();
+                $('#menuNotif5').hide();
+
+
+
+
+                $('.cls').click(function () {
+                    $(this).parent().hide();
+                });
+
+
+                $('#notifsBell').click(function () {
+
+                    var MarkNotificationsAsSeenSuccess = function (args) {
+                        $('#notifsBadge').text('');
+                        for (var i = 0; i < 5; i++) {
+                            if (visibility[i]) {
+                                $('#menuNotif' + i).show();
+                                if (i > 0) {
+                                    $('#divider' + i).show();
+                                }
+                            }
+                        }
+                    }
+
+                    var MarkNotificationsAsSeenFail = function (err) { }
+                    service.MarkNotificationsAsSeen(email, MarkNotificationsAsSeenSuccess, MarkNotificationsAsSeenFail, "");
+                });
+
+
+                //$('#notif').one('webkitAnimationEnd oanimationend msAnimationEnd animationend', function (e) {});
+
+
+                setTimeout(scanNotifications, 3000);
+                setTimeout(function () {
+                    setInterval(scanNotifications, 12000);
+                }, 3000);
+
+
+                function scanNotifications() {
+                    <%if (HttpContext.Current.Session["User"] != null)
+            {%>
+
+                    email = '<%=((UserDetails)HttpContext.Current.Session["User"]).Email%>';
+                   
+
+                    <%if (((UserDetails)HttpContext.Current.Session["User"]).Mode.Equals("passenger") && ((List<Request>)HttpContext.Current.Session["SentRequests"]).Count > 0)
+            {%>
+
+
+                    var sentRequests = [];
+
+                        <%foreach (var r in (List<Request>)HttpContext.Current.Session["SentRequests"])
+            {%>
+                    var id = '<%=r.RequestId%>';
+                    sentRequests.push(id);
+                        <%}%>
+
+
+                    var successFunction = function (args) {
+                        var notifs = [];
+
+
+                        $('.notificationPanel').on('click', ':not(.cls)', function () {
+                            //window.location = 'http://pickr.somee.com/RequestList';
+                            window.location = 'http://localhost:8081/RequestList';
+                        });
+
+                        console.log("popup: " + JSON.stringify(args));
+
+
+                        var slot = 0;
+                        for (var i = 0; i < args.Value.length; i++) {
+
+                            if (args.Value[i].Requests.length > 0) {
+
+                                //Status notifications-----------------------------------------
+                                if (args.Value[i].Requests[0].Status != "soon") {
+
+                                    
+                                    if (args.Value[i].Requests[0].Status != "pending") {
+                                        $('#notificationsContainer').show();
+                                        $('#notif' + slot).delay(i * 300).fadeIn(500);
+                                        $('#notifText' + slot).html('<b>Feedback - </b>' + args.Value[i].Requests[0].DriverName + ' ' + args.Value[i].Requests[0].Status + ' your request on ' + args.Value[i].Requests[0].Time + '.');
+                                        $('#notifProfile' + slot).attr('src', args.Value[i].Requests[0].DriverPicture);
+                                        $('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                                        slot++;
+
+                                        var updated = 0;
+                                        if ($('#updatedRequests').text().trim().length > 0) {
+                                            updated = parseInt($('#updatedRequests').text(), 10);
+                                        }
+                                        $('#updatedRequests').text(updated + 1);
+
+                                    }
+
+
+                                    if (args.Value[i].Requests[0].Status == "pending") {
+                                        //$('#notif' + slot).delay(i * 300).fadeIn(500);
+                                        //$('#notifText' + slot).html('<b>Feedback - </b>' + 'Your request to ' + args.Value[i].Requests[0].DriverName + ' on ' + args.Value[i].Requests[0].Time + ' is still pending.');
+                                        //$('#notifProfile' + slot).attr('src', args.Value[i].Requests[0].DriverPicture);
+                                        //$('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                                        //slot++;
+
+                                    }
+
+
+                                }
+
+
+                                //Time alert notifications---------------------------------------
+                                if (args.Value[i].Requests[0].Status == "soon") {
+                                    var soonNotification = getCookie("SoonNotification");
+
+                                    if ((soonNotification != args.Value[i].Requests[0].IdRequest + args.Value[i].Requests[0].PassengerName + '') || (soonNotification == '0')) {
+                                        //$('#notif' + i).attr('style', 'background-color: rgba(243, 156, 18, 0.9); border-color: #f39c12;');
+                                        $('#notificationsContainer').show();
+                                        $('#notif' + slot).delay(i * 300).fadeIn(500);
+                                        $('#notifText' + slot).html('<b>Alert! </b>Your next journey with ' + args.Value[i].Requests[0].DriverName + ' is ' + args.Value[i].Requests[0].Time + ' away.');
+                                        $('#notifProfile' + slot).attr('src', args.Value[i].Requests[0].DriverPicture);
+                                        $('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                                        slot++;
+
+                                        setCookie("SoonNotification", args.Value[i].Requests[0].IdRequest + args.Value[i].Requests[0].PassengerName + "");
+                                    }
+
+                                }
+
+                            }
+
+
+                        }
+
+
+                    }
+
+                    var failFunction = function (err) { console.log("popup fail:" + err); }
+
+                    service.GetPassengerNotifications(sentRequests, successFunction, failFunction, "");
+
+
+                    <%}%>
+
+                        
+                    <%if (((UserDetails)HttpContext.Current.Session["User"]).Mode.Equals("driver"))
+            {%>
+                    
+                    var successFunctionDriver = function (args) {
+                        var notifs = [];
+
+                        $('.notificationPanel').on('click', ':not(.cls)', function () {
+                            //window.location = 'http://pickr.somee.com/IncomingRequestList';
+                            window.location = 'http://localhost:8081/IncomingRequestList';
+                        });
+
+                        console.log("popup: " + JSON.stringify(args));
+
+
+                        var slot = 0;
+                        for (var i = 0; i < args.Value.length; i++) {
+
+                            //$('#notificationsContainer').show();
+                            //$('#notif' + slot).delay(i * 300).fadeIn(500);
+                            //$('#notifText' + slot).html('<b>Request - </b> Test.');
+                            //$('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                            //slot++;
+                            
+                            if (args.Value[i].Requests.length > 0) {
+
+
+
+                                //Status notifications-----------------------------------------
+                                if (args.Value[i].Requests[0].Status == "requested") {
+
+                                    $('#notificationsContainer').show();
+                                    $('#notif' + slot).delay(i * 300).fadeIn(500);
+                                    $('#notifText' + slot).html('<b>Request - </b>' + args.Value[i].Requests[0].PassengerName + ' sent you a pickup request on ' + args.Value[i].Requests[0].Time + '.');
+                                    $('#notifProfile' + slot).attr('src', args.Value[i].Requests[0].PassengerPicture);
+                                    $('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                                    slot++;
+
+                                    var incoming = 0;
+                                    if ($('#newRequests').text().trim().length > 0) {
+                                        incoming = parseInt($('#newRequests').text(), 10);
+                                    }
+                                    $('#newRequests').text(incoming + 1);
+
+
+
+                                }
+
+
+                                //Time alert notifications---------------------------------------
+                                if (args.Value[i].Requests[0].Status == "soon") {
+                                    //alert('');
+                                    var soonNotification = getCookie("SoonNotification");
+
+                                    if ((soonNotification != args.Value[i].Requests[0].IdRequest + args.Value[i].Requests[0].PassengerName + '') || (soonNotification == '0')) {
+                                        //$('#notif' + i).attr('style', 'background-color: rgba(243, 156, 18, 0.9); border-color: #f39c12;');
+                                        $('#notificationsContainer').show();
+                                        $('#notif' + slot).delay(i * 300).fadeIn(500);
+                                        $('#notifText' + slot).html('<b>Alert! </b>Your next journey with ' + args.Value[i].Requests[0].PassengerName + ' is ' + args.Value[i].Requests[0].Time + ' away.');
+                                        $('#notifProfile' + slot).attr('src', args.Value[i].Requests[0].PassengerPicture);
+                                        $('#notif' + slot).delay(10000 - (i * 600)).fadeOut(500);
+                                        slot++;
+
+                                        setCookie("SoonNotification", args.Value[i].Requests[0].IdRequest + args.Value[i].Requests[0].PassengerName + "");
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+
+                    var failFunctionDriver = function (err) { console.log("popup fail:" + err); }
+
+                    service.GetDriverNotifications(email, successFunctionDriver, failFunctionDriver, "");
+
+                    <%}%>
+
+
+                    var successFunctionMenu = function (args) {
+
+                        //console.log("menu: " + JSON.stringify(args));
+                        
+                        //$('#notifsMenu').attr("visibility", "visible");
+                        
+                        var unseen = 0;
+
+                        for (var i = 0; i < args.Value.length; i++) {
+                            
+                            //if (i > 0) {
+                            //    $('#divider' + i).attr("visibility", "visible");
+                            //}
+
+                            if (args.Value[i].Data == 'welcome') {
+                                //$('#menuNotif' + i).attr("visibility", "visible");
+                                //$('#menuNotifProfile' + i).attr('src', 'http://pickr.somee.com/Images/Pickr_Logo_square_small.jpg');
+                                $('#menuNotifProfile' + i).attr('src', 'http://localhost:8081/Images/Pickr_Logo_square_small.jpg');
+                                //$('#menuNotifText' + i).html('<span style="position: absolute; z-index: 99;margin-left:2px;margin-right:15px; text-align: justify; text-justify: inter-word;">' + 'Pickr Team: <b>Welcome on board!</b> Take a look at your <a href="http://pickr.somee.com/Account/Profile">profile</a>.' + '</span><br><span style="position: absolute; z-index: 99;margin-top:-12px;margin-left:65px;font-size:x-small; opacity:0.6;">' + args.Value[i].Time.split("T")[0] + ' at ' + args.Value[i].Time.split("T")[1].split(":")[0] + ':' + args.Value[i].Time.split("T")[1].split(":")[1] + '</span>');
+                                $('#menuNotifText' + i).html('<span style="position: absolute; z-index: 99;margin-left:2px;margin-right:15px; text-align: justify; text-justify: inter-word;">' + 'Pickr Team: <b>Welcome on board!</b> Take a look at your <a href="http://localhost:8081/Account/Profile">profile</a>.' + '</span><br><span style="position: absolute; z-index: 99;margin-top:-12px;margin-left:65px;font-size:x-small; opacity:0.6;">' + args.Value[i].Time.split("T")[0] + ' at ' + args.Value[i].Time.split("T")[1].split(":")[0] + ':' + args.Value[i].Time.split("T")[1].split(":")[1] + '</span>');
+                            }
+
+                            else {
+                                var data = args.Value[i].Data.split(';');
+                                var username = data[1].split(':')[1];
+                                var status = data[2].split(':')[1];
+                                var time = data[3].split(':')[1];
+
+                                status.charAt(0).toUpperCase();
+
+                                var text = '';
+
+                                switch (status) {
+                                    case 'Pending':
+                                        text = 'Your request to ' + username + ' on ' + time + ' is still pending.';
+                                        break;
+
+                                    case 'Approved':
+                                        text = username + ' ' + status + ' your request on ' + time + '.';
+                                        break;
+
+                                    case 'Rejected':
+                                        text = username + ' ' + status + ' your request on ' + time + '.';
+                                        break;
+
+                                        //Driver notification
+                                    case 'Requested':
+                                        text = username + ' sent you a pickup request for your journey on ' + time + '.';
+                                        break;
+
+                                    case 'Soon':
+                                        text = '<b>Reminder: </b>Your journey with ' + username + ' is ' + time + ' away.';
+                                        break;
+
+                                    default: break;
+                                }
+
+
+                                $('#menuNotifProfile' + i).attr('src', args.Value[i].Picture);
+                                $('#menuNotifText' + i).html('<span style="position: absolute; z-index: 99;margin-left:2px;margin-right:15px; text-align: justify; text-justify: inter-word;">' + text + '</span><br><span style="position: absolute; z-index: 99;margin-top:-12px;margin-left:65px;font-size:x-small; opacity:0.6;">' + args.Value[i].Time.split("T")[0] + ' at ' + args.Value[i].Time.split("T")[1].split(":")[0] + ':' + args.Value[i].Time.split("T")[1].split(":")[1] + '</span>');
+
+                            }
+
+
+                            if (args.Value[i].Seen == false) {
+                                unseen++;
+                            }
+
+                            visibility[i] = true;
+                        }
+
+                        if (unseen > 0) {
+                            $('#notifsBadge').text(unseen);
+                        }
+                    }
+
+                    var failFunctionMenu = function (err) { console.log("menu fail: " + err); }
+
+                    service.GetMenuNotifications(email, successFunctionMenu, failFunctionMenu, "");
+
+                    <%}%>
+
+                }
+
+
+            });
+
+
+            
+
+        </script>
+
+
+        <div class="navbar navbar-default navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" runat="server" id="Logo" href="~/Default" style="padding-top: 8px">
+                        <img src="/Images/Pickr_Logo.png" style="vertical-align: middle;" alt="Pickr." height="40" border="0">
+                    </a>
+                </div>
+                <div class="navbar-collapse collapse">
+
+                    <ul class="nav navbar-nav">
+                        <li><a runat="server" href="~/PassengerHome" id="HomeLink">Home</a></li>
+                        <li><a runat="server" href="~/About" id="AboutLink">About</a></li>
+                        <li><a runat="server" href="~/Contact" id="ContactLink">Contact</a></li>
+                        <li><a runat="server" href="~/OffersList" id="offersList">My Journeys</a></li>
+                        <li><a runat="server" href="~/RequestList" id="requestsList">My Sent Requests <span runat="server" class="badge" id="updatedRequests"></span></a></li>
+                        <li><a runat="server" href="~/IncomingRequestList" id="incomingRequestsList">Pending Requests <span runat="server" class="badge" id="newRequests"></span></a></li>
+                        <li><a runat="server" href="#" class="separ" id="Sep">|</a></li>
+                        <li><a runat="server" href="~/Account/Manage?mode=driver" id="driverMode">Switch to Driver?</a></li>
+                        <li><a runat="server" href="~/Account/Manage?mode=passenger" id="passengerMode">Switch to Passenger?</a></li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a runat="server" href="#" class="separ" id="Sep2">|</a></li>
+                        <li class="dropdown">
+                            <a runat="server" id="notifsBell" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-bell-o" style="font-size: larger;"></i>&nbsp;<span runat="server" class="badge" id="notifsBadge" style="position: absolute; z-index: 99; margin-top: -3px; margin-left: -10px; font-size: x-small; border-radius: 50%; padding: 2px 4px 2px 4px;"></span></a>
+                            <ul id="notifsMenu" class="dropdown-menu" role="menu" style="font-size: small; width: 300px;">
+                                <li id="menuNotif0">
+                                    <img id="menuNotifProfile0" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText0"></asp:Label>
+                                </li>
+                                <li id="divider1" class="divider"></li>
+                                <li id="menuNotif1">
+                                    <img id="menuNotifProfile1" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText1"></asp:Label>
+                                </li>
+                                <li id="divider2" class="divider"></li>
+                                <li id="menuNotif2">
+                                    <img id="menuNotifProfile2" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText2"></asp:Label>
+                                </li>
+                                <li id="divider3" class="divider"></li>
+                                <li id="menuNotif3">
+                                    <img id="menuNotifProfile3" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText3"></asp:Label>
+                                </li>
+                                <li id="divider4" class="divider"></li>
+                                <li id="menuNotif4">
+                                    <img id="menuNotifProfile4" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText4"></asp:Label>
+                                </li>
+                                <li id="divider5" class="divider"></li>
+                                <li id="menuNotif5">
+                                    <img id="menuNotifProfile5" class="img-responsive" height="50" width="50" alt="User" style="display: inline-block; margin: 0px; margin-right: 5px; margin-left: 5px;" src="" />
+                                    <asp:Label runat="server" ID="menuNotifText5"></asp:Label>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <asp:LoginView runat="server" ViewStateMode="Disabled" ID="loginView">
+
+                        <AnonymousTemplate>
+
+                            <ul class="nav navbar-nav navbar-right">
+                                <li><a runat="server" href="~/Account/Register">Register</a></li>
+                                <li><a runat="server" href="~/Account/Login">Sign in</a></li>
+                            </ul>
+                        </AnonymousTemplate>
+                        <LoggedInTemplate>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li>
+                                    <a runat="server" href="~/Account/Profile" title="Profile" style="padding: 12px 10px 0px 10px;">
+                                        <asp:Image runat="server" ID="picture" class="img-responsive" Height="40" Width="40" Style="border-radius: 50%; display: inline-block; margin-right: 5px;"></asp:Image>
+                                        <asp:LoginName runat="server" ID="helloUsername" Style="display: inline-block"></asp:LoginName>
+                                    </a>
+                                </li>
+                                <li style="margin-bottom: 0">
+                                    <asp:LoginStatus runat="server" LogoutAction="Redirect" LogoutText="Log off" LogoutPageUrl="~/" OnLoggingOut="Unnamed_LoggingOut" />
+                                </li>
+
+                            </ul>
+                        </LoggedInTemplate>
+                    </asp:LoginView>
+
+                </div>
+            </div>
+        </div>
+
+        <%--<div id="TitleContent" style="text-align: center">
+            <a runat="server" href="~/">
+                <asp:Image  ID="Image1" runat="server" ImageUrl="~/Images/logo.jpg" BorderStyle="None" />
+            </a>  
+            <br />  
+        </div>--%>
+
+        <br />
+
+        <div id="notificationsContainer" style="position: absolute; height: 100%; width: 100%;">
+            
+            <script type="text/javascript">$('#notificationsContainer').hide();</script>
+
+            <div class="alert alert-dismissible alert-info notificationPanel" id="notif0">
+                <script type="text/javascript">$('#notif0').hide();</script>
+                <button type="button" class="cls">&times;</button>
+                <img id="notifProfile0" class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+                <asp:Label runat="server" ID="notifText0">. · . · . ·</asp:Label>
+            </div>
+
+            <div class="alert alert-dismissible alert-info notificationPanel" id="notif1" style="margin-top: 90px">
+                <script type="text/javascript">$('#notif1').hide();</script>
+                <button type="button" class="cls">&times;</button>
+                <img id="notifProfile1" class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+                <asp:Label runat="server" ID="notifText1">. · . · . ·</asp:Label>
+            </div>
+
+            <div class="alert alert-dismissible alert-info notificationPanel" id="notif2" style="margin-top: 180px">
+                <script type="text/javascript">$('#notif2').hide();</script>
+                <button type="button" class="cls">&times;</button>
+                <img id="notifProfile2" class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+                <asp:Label runat="server" ID="notifText2">. · . · . ·</asp:Label>
+            </div>
+
+            <div class="alert alert-dismissible alert-info notificationPanel" id="notif3" style="margin-top: 270px">
+                <script type="text/javascript">$('#notif3').hide();</script>
+                <button type="button" class="cls">&times;</button>
+                <img id="notifProfile3" class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+                <asp:Label runat="server" ID="notifText3">. · . · . ·</asp:Label>
+            </div>
+
+            <div class="alert alert-dismissible alert-info notificationPanel" id="notif4" style="margin-top: 360px">
+                <script type="text/javascript">$('#notif4').hide();</script>
+                <button type="button" class="cls">&times;</button>
+                <img id="notifProfile4" class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+                <asp:Label runat="server" ID="notifText4">. · . · . ·</asp:Label>
+            </div>
+
+        </div>
+
+
+        <%--<div class="alert alert-dismissible alert-warning notificationPanel" >
+            <button type="button" class="cls">&times;</button>
+            <img class="img-responsive" height="60" width="60" alt="User" style="display: inline-block; margin: 0px; margin-right: 15px;" src="" />
+            <asp:Label runat="server">. · . · . ·</asp:Label>
+        </div>--%>
+
+        <div class="container body-content">
+            <asp:ContentPlaceHolder ID="MainContent" runat="server">
+            </asp:ContentPlaceHolder>
+            <hr />
+            <footer>
+                <p>&copy; <%: DateTime.Now.Year %> - Pickr</p>
+            </footer>
+        </div>
+    </form>
+</body>
+</html>
