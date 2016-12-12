@@ -56,7 +56,10 @@ namespace Pickr.Account
         protected void Facebook_Click(object sender, EventArgs e)
         {
             //Redirect to the same actual page with Facebook API code response if it is null
-            Response.Redirect("https://www.facebook.com/v2.4/dialog/oauth/?client_id=" + ConfigurationManager.AppSettings["FacebookID"] + "&redirect_uri=http://" + Request.ServerVariables["SERVER_NAME"] + ":" + Request.ServerVariables["SERVER_PORT"] + "/Account/Login.aspx&response_type=code&state=1&scope=email,user_birthday");
+            string url = ("https://www.facebook.com/v2.4/dialog/oauth/?client_id=" + ConfigurationManager.AppSettings["FacebookID"] + "&redirect_uri=http://" + Request.ServerVariables["SERVER_NAME"] + ":" + Request.ServerVariables["SERVER_PORT"] + "/Account/Login.aspx&response_type=code&state=1&scope=email,user_birthday");
+
+            Response.Redirect(url);
+
         }
 
         public void FacebookLogin(string code)
@@ -95,6 +98,12 @@ namespace Pickr.Account
         {
             // Exchange the code for an access token
             Uri targetUri = new Uri("https://graph.facebook.com/oauth/access_token?client_id=" + ConfigurationManager.AppSettings["FacebookID"] + "&client_secret=" + ConfigurationManager.AppSettings["FacebookSecret"] + "&redirect_uri=http://" + Request.ServerVariables["SERVER_NAME"] + ":" + Request.ServerVariables["SERVER_PORT"] + "/Account/Login.aspx&code=" + code);
+
+            HttpCookie myCookie = new HttpCookie("targetUri");
+            myCookie["Uri"] = targetUri.ToString();
+            myCookie.Expires = DateTime.Now.AddDays(1d);
+            Response.Cookies.Add(myCookie);
+
             HttpWebRequest at = (HttpWebRequest)HttpWebRequest.Create(targetUri);
 
             System.IO.StreamReader str = new System.IO.StreamReader(at.GetResponse().GetResponseStream());

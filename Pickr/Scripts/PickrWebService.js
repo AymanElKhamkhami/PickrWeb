@@ -19,7 +19,7 @@ function someeAdRemover(response) {
     return jsonResponse;
 }
 
-var somee = false;
+var somee = true;
 
 PickrWebService.prototype = {
     self: null,
@@ -472,7 +472,7 @@ PickrWebService.prototype = {
             postData: jsonData,
             headers: { "X-Requested-With": null },
             //load: successFunction,
-            load: somee ? function (response) { successFunction(someeAdRemover(response)); } : successFunction,
+            load: somee ? function (response) { successFunction(someeAdRemover(response));} : successFunction,
             error: failFunction
         };
         var deferred = dojo.xhrPost(xhrArgs);
